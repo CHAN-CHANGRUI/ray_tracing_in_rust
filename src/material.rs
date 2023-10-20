@@ -5,9 +5,7 @@ pub trait Material: Sync {
         &self,
         r_in: &Ray,
         rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool;
+    ) -> Option<(Ray, Color)>;
 }
 
 #[derive(Clone, Copy, Default)]
@@ -26,21 +24,16 @@ impl Material for Lambertian {
         &self,
         _r_in: &Ray,
         rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
+    ) -> Option<(Ray, Color)> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
 
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
 
-        *scattered = Ray {
-            origin: rec.p,
-            direction: scatter_direction,
-        };
-        *attenuation = self.albedo;
-        true
+        let scattered = Ray::new(rec.p, scatter_direction);
+        let attenuation = self.albedo;
+        Some((scattered, attenuation))
     }
 }
 
@@ -64,13 +57,14 @@ impl Material for Metal {
         &self,
         r_in: &Ray,
         rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
+    ) -> Option<(Ray, Color)> {
         let reflected = Vec3::reflect(Vec3::unit_vector(r_in.direction()), rec.normal);
-        *scattered = Ray::new(rec.p, reflected + self.fuzz * Vec3::random_in_unit_sphere());
-        *attenuation = self.albedo;
-        Vec3::dot(scattered.direction(), rec.normal) > 0.0
+        let scattered = Ray::new(rec.p, reflected + self.fuzz * Vec3::random_in_unit_sphere());
+        let attenuation = self.albedo;
+        if Vec3::dot(scattered.direction(), rec.normal) > 0.0 {
+            return Some((scattered, attenuation));
+        }
+        None
     }
 }
 
@@ -101,10 +95,8 @@ impl Material for Dielectric {
         &self,
         r_in: &Ray,
         rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
-        *attenuation = Color::new(1.0, 1.0, 1.0);
+    ) -> Option<(Ray, Color)> {
+        let attenuation = Color::new(1.0, 1.0, 1.0);
         let refraction_ratio = if rec.front_face {
             1.0 / self.ir
         } else {
@@ -125,8 +117,8 @@ impl Material for Dielectric {
                 Vec3::refract(unit_direction, rec.normal, refraction_ratio)
             };
 
-        *scattered = Ray::new(rec.p, direction);
+        let scattered = Ray::new(rec.p, direction);
 
-        true
+        Some((scattered, attenuation))
     }
 }

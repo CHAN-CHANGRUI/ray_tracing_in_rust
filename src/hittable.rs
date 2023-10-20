@@ -1,39 +1,38 @@
-use std::rc::Rc;
-
 use crate::{interval::*, material::Material, ray::*, vec3::Vec3};
 
-#[derive(Clone, Default)]
-pub struct HitRecord {
+
+pub struct HitRecord<'a> {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
-    pub mat: Option<Rc<dyn Material>>,
+    pub mat: &'a dyn Material,
 }
 
-impl HitRecord {
-    pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
-        self.front_face = Vec3::dot(ray.direction(), outward_normal) < 0.0;
-        self.normal = if self.front_face {
+impl HitRecord<'_> {
+    pub fn set_face_normal(ray: &Ray, outward_normal: Vec3) -> (Vec3, bool) {
+        let front_face = Vec3::dot(ray.direction(), outward_normal) < 0.0;
+        let normal = if front_face {
             outward_normal
         } else {
             -outward_normal
         };
+        (normal, front_face)
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: Sync {
     fn hit(&self, r: &Ray, ray_t: &Interval) -> Option<HitRecord>;
 }
 
 #[derive(Default)]
 pub struct HittableList {
-    list: Vec<Rc<dyn Hittable>>,
+    list: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
-    pub fn add(&mut self, object: Rc<dyn Hittable>) {
-        self.list.push(object);
+    pub fn add(&mut self, object: impl Hittable + 'static) {
+        self.list.push(Box::new(object));
     }
 }
 

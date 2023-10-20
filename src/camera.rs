@@ -1,3 +1,7 @@
+extern crate rayon;
+
+use rayon::prelude::*;
+
 use crate::{
     color::Color,
     hittable::Hittable,
@@ -58,26 +62,30 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn render(&mut self, world: &dyn Hittable) -> Vec<i32> {
+    pub fn render(&mut self, world: &dyn Hittable) -> Vec<(i32, i32, i32)> {
         self.initialize();
         println!("P3\n{} {}\n255", self.image_width, self.image_height);
-        let mut collection = Vec::new();
-        for j in 0..self.image_height {
-            eprintln!("\rScanlines remaining: {}", self.image_height - j);
-            for i in 0..self.image_width {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..self.samples_per_pixel {
-                    let r = self.get_ray(i, j);
-                    pixel_color = pixel_color + Camera::ray_color(&r, self.max_depth, world);
-                }
-                let (x, y, z) = pixel_color.color(self.samples_per_pixel);
-                collection.push(x);
-                collection.push(y);
-                collection.push(z);
-            }
-        }
+        eprintln!("\rProcessing...");
+        let collection = (0..self.image_height)
+            .into_par_iter()
+            .map(|j| {
+                (0..self.image_width)
+                    .into_par_iter()
+                    .map(|i| {
+                        let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                        for _ in 0..self.samples_per_pixel {
+                            let r = self.get_ray(i, j);
+                            pixel_color =
+                                pixel_color + Camera::ray_color(&r, self.max_depth, world);
+                        }
+                        let (x, y, z) = pixel_color.color(self.samples_per_pixel);
+                        (x, y, z)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
 
-        collection
+        collection.into_iter().flatten().collect::<Vec<_>>()
     }
 
     fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
@@ -86,13 +94,10 @@ impl Camera {
         }
 
         if let Some(rec) = world.hit(r, &Interval::new(0.001, rtweekend::INFINITY)) {
-            let mut scattered = Ray::default();
-            let mut attenuation = Color::default();
-            if let Some(mat) = rec.mat.clone() {
-                if mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
-                    return attenuation * Self::ray_color(&scattered, depth - 1, world);
-                }
+            if let Some((r, c)) = rec.mat.scatter(r, &rec) {
+                return c * Self::ray_color(&r, depth - 1, world);
             }
+
             return Color::new(0.0, 0.0, 0.0);
         }
 
