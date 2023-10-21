@@ -3,6 +3,6 @@ It is a Rust implementation of ["Ray Tracing In One Weekend" by Peter Shirley](h
 
 it's my first Rust practice
 
-have been learning a lot from [fralken's implementation](https://github.com/fralken/ray-tracing-in-one-weekend)
+have been learning from [fralken's implementation](https://github.com/fralken/ray-tracing-in-one-weekend)
 
 ![](./image_new.png)
