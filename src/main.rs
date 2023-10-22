@@ -91,7 +91,7 @@ fn main() {
 
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 1200;
-    camera.samples_per_pixel = 200;
+    camera.samples_per_pixel = 500;
     camera.max_depth = 50;
     camera.vfov = 20.0;
     camera.lookfrom = Point3::new(13.0, 2.0, 3.0);

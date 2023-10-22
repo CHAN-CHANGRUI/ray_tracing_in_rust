@@ -1,17 +1,17 @@
 
 
-use crate::{hittable::*, interval::Interval, ray::*, vec3::*, material};
+use crate::{hittable::*, interval::Interval, ray::*, vec3::*, material::Material};
 
 
 #[derive(Clone)]
-pub struct Sphere<Material> {
+pub struct Sphere<M: Material> {
     pub center: Vec3,
     pub radius: f64,
-    pub mat: Material,
+    pub mat: M,
 }
 
-impl <Material>Sphere<Material> {
-    pub fn new(center: Vec3, radius: f64, mat: Material) -> Self {
+impl <M: Material>Sphere<M> {
+    pub fn new(center: Vec3, radius: f64, mat: M) -> Self {
         Sphere {
             center,
             radius,
@@ -20,7 +20,7 @@ impl <Material>Sphere<Material> {
     }
 }
 
-impl <Material: Sync + material::Material>Hittable for Sphere <Material> {
+impl <M: Material>Hittable for Sphere <M> {
     fn hit(&self, r: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         let oc = r.origin() - self.center;
         let a = r.direction().length_squared();
