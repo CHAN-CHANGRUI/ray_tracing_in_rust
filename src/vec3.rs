@@ -115,6 +115,7 @@ impl Vec3 {
         let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * n;
         r_out_perp + r_out_parallel
     }
+
 }
 
 impl Default for Vec3 {
@@ -222,3 +223,19 @@ impl Div<f64> for Vec3 {
         (1.0 / t) * self
     }
 }
+
+impl Index<usize> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.e[i]
+    }
+}
+
+impl IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
+        &mut self.e[i]
+    }
+}
+
+
