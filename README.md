@@ -3,6 +3,4 @@ It is a Rust implementation of ["Ray Tracing In One Weekend" by Peter Shirley](h
 
 have been learning from [fralken's implementation](https://github.com/fralken/ray-tracing-in-one-weekend) & [zhing2006's implementation](https://github.com/zhing2006/Ray-Tracing-in-One-Weekend-CN)
 
-i have finished [the next book](https://github.com/cr-chan/rtnw).
-
 ![](./image_new.png)
